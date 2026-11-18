@@ -1,57 +1,69 @@
 import asyncio
+import os
 from telethon import TelegramClient
 from telethon.sessions import StringSession
 
-# اطلاعات اختصاصی API شما
+# ========================================================
+# 🎛️ تنظیمات اصلی و اختصاصی
+START_LINE = 10000     
+END_LINE = 20000        
+
 API_ID = 38369797
 API_HASH = "f96396f6eabe4018dc809f21c6314574"
 
-# نام فایل‌های شما در مخزن گیت‌هاب
+# خواندن رشته سشن از فایل متنی مخصوص هر اکانت
 SESSION_FILE = "Session1.text"
-NUMBERS_FILE = "Number1.tex"
 
-async def main():
+TEXT_FILE_PATH = "Number.text" 
+TARGET_CHAT = "Havij_robot"
+# ========================================================
+
+async def send_messages():
     try:
-        # خواندن رشته سشن از فایل
-        with open(SESSION_FILE, "r", encoding="utf-8") as f:
-            session_string = f.read().strip()
+        # خواندن سشن از فایل متنی
+        with open(SESSION_FILE, "r", encoding="utf-8") as sf:
+            session_string = sf.read().strip()
     except FileNotFoundError:
-        print(f"❌ خطا: فایل سشن {SESSION_FILE} پیدا نشد!")
+        print(f"❌ خطا: فایل سشن '{SESSION_FILE}' پیدا نشد!")
         return
 
-    # اتصال به تلگرام
     client = TelegramClient(StringSession(session_string), API_ID, API_HASH)
-    
-    print("🔄 در حال اتصال به تلگرام...")
+    print("⏳ در حال اتصال به تلگرام روی Render...")
     await client.start()
-    print("✅ با موفقیت متصل شد! در حال خواندن اعداد...")
-
-    try:
-        # خواندن فایل اعداد
-        with open(NUMBERS_FILE, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-    except FileNotFoundError:
-        print(f"❌ خطا: فایل اعداد {NUMBERS_FILE} پیدا نشد!")
-        return
-
-    # ارسال خط به خط اعداد با تأخیر ۲.۵ ثانیه
-    for line in lines:
-        number = line.strip()
-        if number:
-            try:
-                # ارسال به بخش پیام‌های ذخیره‌شده (Saved Messages) خود اکانت
-                await client.send_message('me', number)
-                print(f"📤 ارسال شد: {number}")
-            except Exception as e:
-                print(f"⚠️ خطا در ارسال {number}: {e}")
-            
-            # تأخیر ۲.۵ ثانیه‌ای بین هر ارسال
-            await asyncio.sleep(2.5)
-
-    print("🏁 ارسال تمام اعداد به پایان رسید!")
+    print("🔓 یوزربات با موفقیت متصل شد و آماده ارسال است!")
     
-    # روشن نگه داشتن ربات بعد از اتمام ارسال
-    await client.run_until_disconnected()
+    try:
+        if not os.path.exists(TEXT_FILE_PATH):
+            print(f"❌ خطا: فایل متنی '{TEXT_FILE_PATH}' پیدا نشد!")
+            await client.disconnect()
+            return
+
+        with open(TEXT_FILE_PATH, "r", encoding="utf-8") as f:
+            print(f"🚀 شروع ارسال از خط {START_LINE} تا {END_LINE} به مقصد {TARGET_CHAT} (با وقفه دقیق ۳ ثانیه)...")
+            
+            for line_number, line in enumerate(f, start=1):
+                if line_number < START_LINE:
+                    continue
+                if line_number > END_LINE:
+                    print(f"🛑 به خط {END_LINE} رسیدیم. توقف ارسال.")
+                    break
+                    
+                text = line.strip()
+                if text:
+                    try:
+                        await client.send_message(TARGET_CHAT, text)
+                        print(f"✅ [خط {line_number}] ارسال شد: {text}")
+                    except Exception as e:
+                        print(f"❌ خطا در ارسال خط {line_number}: {e}")
+                        
+                    # وقفه دقیق ۳ ثانیه بین هر ارسال
+                    await asyncio.sleep(3)
+                    
+        print("🏁 ارسال تمام خطوط با موفقیت تمام شد.")
+    except Exception as e:
+        print(f"❌ خطای ناخواسته در خواندن فایل: {e}")
+        
+    await client.disconnect()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(send_messages())
