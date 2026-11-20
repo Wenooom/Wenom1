@@ -5,8 +5,8 @@ from telethon.sessions import StringSession
 
 # ========================================================
 # 🎛️ تنظیمات اصلی و اختصاصی
-START_LINE = 50000
-END_LINE = 60000
+START_LINE = 150000
+END_LINE = 160000
 
 # تعداد دقیق پیامی که بعد از رسیدن به آن، همه چیز متوقف می‌شود
 MAX_MESSAGES = 10000
